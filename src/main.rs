@@ -14,8 +14,11 @@ struct Cli {
     #[arg(help = "the path to the lua file")]
     path: PathBuf,
 
-    #[arg(short, long, help = "The name of the function to run", default_value = "bench")]
-    func: String,
+    #[arg(short, long, help = "The name of the function to benchmark", default_value = "bench")]
+    bench_func: String,
+
+    #[arg(short, long, help = "The name of the function that sets up stuff for the benchmark. Values returned by the setup function will be provided as args for the benchmark function. Setup time is not included in the bench time.")]
+    setup_func: Option<String>,
 
     #[arg(long, help = "The minimum N", default_value = "1")]
     min: u64,
@@ -23,7 +26,7 @@ struct Cli {
     #[arg(long, help = "The maxmimum N", default_value = "10000")]
     max: u64,
 
-    #[arg(short, long, help = "The number of times to repeat each N", default_value = "50")]
+    #[arg(short, long, help = "The number of times to repeat each N. A higher number results in more stable/accurate results.", default_value = "50")]
     repeats: usize,
 
     #[arg(short, long, help = "The path to the output .csv file")]
@@ -44,7 +47,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let bench_test_text = std::fs::read_to_string(args.path)?;
     lua.load(bench_test_text).exec()?;
 
-    let bench_test: Function = lua.globals().get(args.func)?;
+    let bench_test: Function = lua.globals().get(args.bench_func)?;
+
+    let setup: Option<Function> = if let Some(name) = args.setup_func {
+        Some(lua.globals().get(name)?)
+    } else {
+        None
+    };
 
     let mut timings = Vec::with_capacity((args.max-args.min+1) as usize);
     
@@ -53,7 +62,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let pb = ProgressBar::new(args.max-args.min+1);
     
     for n in args.min..=args.max {
-        let output: f32 = bench_avg_time.call((bench_test.clone(), n, args.repeats))?;
+        let output: f32 = bench_avg_time.call((bench_test.clone(), setup.clone(), n, args.repeats))?;
         timings.push(output);
         pb.inc(1);
     }

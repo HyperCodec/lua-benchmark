@@ -12,5 +12,7 @@ You can configure the type of lua being used by changing the feature of the `mlu
 `benchmark --help`
 
 ### Examples
-![linear](doc/o(n).png)
-![quadratic](doc/o(n^2).png)
+![linear](doc/linear.png)
+![quadratic](doc/quadratic.png)
+![fibonacci](doc/fibonacci.png)
+![binarySearch](doc/binarySearch.png)
