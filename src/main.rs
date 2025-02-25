@@ -33,14 +33,14 @@ struct Cli {
     output: PathBuf,
 }
 
-const BENCH: &str = include_str!("bench.lua");
+const BENCHER: &str = include_str!("bencher.lua");
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Cli::parse();
 
     println!("loading lua files");
     let lua = Lua::new();
-    lua.load(BENCH).exec()?;
+    lua.load(BENCHER).exec()?;
 
     let bench_avg_time: Function = lua.globals().get("benchAvgTime")?;
 
